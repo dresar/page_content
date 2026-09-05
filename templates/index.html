@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Cloner Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+            display: none;
+        }
+
+        .stats-container.active {
+            display: grid;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: #667eea;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .progress-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .progress-message {
+            text-align: center;
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 15px;
+            min-height: 20px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .download-btn {
+            margin-top: 15px;
+            display: none;
+        }
+
+        .download-btn.active {
+            display: block;
+        }
+
+        .cleanup-btn {
+            margin-top: 10px;
+            background: #6c757d;
+            display: none;
+        }
+
+        .cleanup-btn.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Web Cloner</h1>
+        <p class="subtitle">Download any website as a portable ZIP file</p>
+
+        <form id="cloneForm">
+            <div class="form-group">
+                <label for="url">Website URL</label>
+                <input 
+                    type="url" 
+                    id="url" 
+                    name="url" 
+                    placeholder="https://example.com" 
+                    required
+                >
+            </div>
+            <button type="submit" id="submitBtn">Clone Website</button>
+        </form>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-message" id="progressMessage"></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+            
+            <div class="stats-container" id="statsContainer">
+                <div class="stat-card">
+                    <div class="stat-value" id="cssCount">0</div>
+                    <div class="stat-label">CSS</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="jsCount">0</div>
+                    <div class="stat-label">JS</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="imgCount">0</div>
+                    <div class="stat-label">Images</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="fontCount">0</div>
+                    <div class="stat-label">Fonts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="musicCount">0</div>
+                    <div class="stat-label">Music</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status" id="statusMessage"></div>
+
+        <a id="downloadBtn" class="download-btn" href="#" download>
+            <button>Download ZIP File</button>
+        </a>
+
+        <button id="cleanupBtn" class="cleanup-btn" type="button">Clean Up</button>
+    </div>
+
+    <script>
+        const form = document.getElementById('cloneForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressMessage = document.getElementById('progressMessage');
+        const statsContainer = document.getElementById('statsContainer');
+        const statusMessage = document.getElementById('statusMessage');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const cleanupBtn = document.getElementById('cleanupBtn');
+        
+        let currentTaskId = null;
+        let statusInterval = null;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const url = document.getElementById('url').value;
+            if (!url) return;
+
+            // Reset UI
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Cloning...';
+            progressContainer.classList.add('active');
+            statsContainer.classList.remove('active');
+            statusMessage.className = 'status';
+            downloadBtn.classList.remove('active');
+            cleanupBtn.classList.remove('active');
+
+            try {
+                const response = await fetch('/clone', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `url=${encodeURIComponent(url)}`
+                });
+
+                const data = await response.json();
+                currentTaskId = data.task_id;
+
+                // Start polling for status
+                statusInterval = setInterval(checkStatus, 1000);
+                checkStatus();
+            } catch (error) {
+                showError('Failed to start cloning: ' + error.message);
+                resetForm();
+            }
+        });
+
+        async function checkStatus() {
+            if (!currentTaskId) return;
+
+            try {
+                const response = await fetch(`/status/${currentTaskId}`);
+                const status = await response.json();
+
+                updateProgress(status.progress, status.message);
+
+                if (status.stats) {
+                    statsContainer.classList.add('active');
+                    document.getElementById('cssCount').textContent = status.stats.css || 0;
+                    document.getElementById('jsCount').textContent = status.stats.js || 0;
+                    document.getElementById('imgCount').textContent = status.stats.images || 0;
+                    document.getElementById('fontCount').textContent = status.stats.fonts || 0;
+                    document.getElementById('musicCount').textContent = status.stats.music || 0;
+                }
+
+                if (status.status === 'completed') {
+                    clearInterval(statusInterval);
+                    showSuccess('Website cloned successfully!');
+                    downloadBtn.href = `/download/${currentTaskId}`;
+                    downloadBtn.classList.add('active');
+                    cleanupBtn.classList.add('active');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Clone Website';
+                } else if (status.status === 'error') {
+                    clearInterval(statusInterval);
+                    showError(status.message);
+                    resetForm();
+                }
+            } catch (error) {
+                console.error('Error checking status:', error);
+            }
+        }
+
+        function updateProgress(progress, message) {
+            progressFill.style.width = progress + '%';
+            progressFill.textContent = progress + '%';
+            progressMessage.textContent = message || '';
+        }
+
+        function showSuccess(message) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status success';
+        }
+
+        function showError(message) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status error';
+        }
+
+        function resetForm() {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Clone Website';
+            progressContainer.classList.remove('active');
+            currentTaskId = null;
+        }
+
+        cleanupBtn.addEventListener('click', async () => {
+            if (!currentTaskId) return;
+
+            try {
+                await fetch(`/cleanup/${currentTaskId}`, { method: 'POST' });
+                resetForm();
+                downloadBtn.classList.remove('active');
+                cleanupBtn.classList.remove('active');
+                statusMessage.className = 'status';
+                showSuccess('Cleanup completed');
+            } catch (error) {
+                showError('Cleanup failed: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
+
